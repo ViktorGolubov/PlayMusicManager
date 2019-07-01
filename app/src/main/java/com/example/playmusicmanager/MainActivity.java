@@ -5,15 +5,15 @@ import androidx.core.app.NotificationCompat;
 
 import android.app.NotificationManager;
 import android.app.Service;
-import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -22,12 +22,13 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, MediaPlayer.OnPreparedListener, View.OnLongClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, MediaPlayer.OnPreparedListener{
 
     private MediaPlayer mediaPlayer;
     private int currentTrack = 0;
     private List<String> songsList;
     private ListView listView;
+    private ListAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,9 +68,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             songsList.add(fields[i].getName());
         }
 
-        final String[] songArray = { "bensoundbrazilsamba", "bensoundcountryboy.mp3",
-                "bensoundindia.mp3", "bensoundlittleplanet.mp3", "bensoundpsychedelic.mp3",
-                "bensoundrelaxing.mp3", "bensoundtheelevatorbossanova.mp3"};
+        adapter =  new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, songsList);
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long id) {
+                if(mediaPlayer != null) {
+                    mediaPlayer.release();
+                }
+                int resID = getResources().getIdentifier(songsList.get(i), "raw", getPackageName());
+                mediaPlayer = MediaPlayer.create(MainActivity.this, resID);
+                mediaPlayer.start();
+            }
+        });
+
+        final String[] songArray = { "bensoundbrazilsamba", "bensoundcountryboy",
+                "bensoundindia", "bensoundlittleplanet", "bensoundpsychedelic",
+                "bensoundrelaxing", "bensoundtheelevatorbossanova"};
 
         btnChangeSong.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -84,6 +99,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 currentTrack += 1;
                                 mediaPlayer = new MediaPlayer();
                                 mediaPlayer.setDataSource("android.resource://" + getPackageName() + "/R.raw." + songArray[currentTrack]);
+
                                 mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                                     @Override
                                     public void onPrepared(MediaPlayer mp) {
@@ -143,6 +159,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 mediaPlayer.prepareAsync();
                 break;
+
             case R.id.activity_main_btn_stop:
                 if (mediaPlayer.isPlaying()) {
                     onDestroy();
@@ -158,8 +175,4 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    @Override
-    public boolean onLongClick(View v) {
-        return false;
-    }
 }
